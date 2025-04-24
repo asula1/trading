@@ -1,0 +1,134 @@
+name: monitoring-service
+services:
+- name: monitoring
+  github:
+    branch: main
+    deploy_on_push: true
+  dockerfile_path: Dockerfile
+  envs:
+  - key: DB_HOST
+    scope: RUN_TIME
+    value: ${db.DATABASE_HOST}
+  - key: DB_PORT
+    scope: RUN_TIME
+    value: ${db.DATABASE_PORT}
+  - key: DB_NAME
+    scope: RUN_TIME
+    value: ${db.DATABASE_NAME}
+  - key: DB_USER
+    scope: RUN_TIME
+    value: ${db.DATABASE_USER}
+  - key: DB_PASSWORD
+    scope: RUN_TIME
+    value: ${db.DATABASE_PASSWORD}
+  - key: CONSUL_HOST
+    scope: RUN_TIME
+    value: ${consul.HOST}
+  - key: CONSUL_PORT
+    scope: RUN_TIME
+    value: ${consul.PORT}
+  - key: PROMETHEUS_PORT
+    scope: RUN_TIME
+    value: "8001"
+  - key: API_PORT
+    scope: RUN_TIME
+    value: "8000"
+  - key: LOG_LEVEL
+    scope: RUN_TIME
+    value: "INFO"
+  http_port: 8000
+  instance_count: 1
+  instance_size_slug: basic-xs
+
+databases:
+- engine: PG
+  name: db
+  production: false
+  version: "13"
+
+envs:
+- key: DOCKERHUB_USERNAME
+  scope: BUILD_TIME
+  value: ${DOCKERHUB_USERNAME}
+- key: DOCKERHUB_TOKEN
+  scope: BUILD_TIME
+  value: ${DOCKERHUB_TOKEN}
+
+services:
+- name: consul
+  image: consul:1.15
+  envs:
+  - key: CONSUL_LOCAL_CONFIG
+    scope: RUN_TIME
+    value: '{"datacenter":"dc1","server":true,"bootstrap_expect":1}'
+  - key: CONSUL_BIND_INTERFACE
+    scope: RUN_TIME
+    value: eth0
+  - key: CONSUL_CLIENT_INTERFACE
+    scope: RUN_TIME
+    value: eth0
+  instance_count: 1
+  instance_size_slug: basic-xs
+
+services:
+- name: prometheus
+  image: prom/prometheus:latest
+  envs:
+  - key: PROMETHEUS_CONFIG
+    scope: RUN_TIME
+    value: /etc/prometheus/prometheus.yml
+  volumes:
+  - path: /etc/prometheus
+    mount_path: /etc/prometheus
+  instance_count: 1
+  instance_size_slug: basic-xs
+
+services:
+- name: alertmanager
+  image: prom/alertmanager:latest
+  envs:
+  - key: ALERTMANAGER_CONFIG
+    scope: RUN_TIME
+    value: /etc/alertmanager/alertmanager.yml
+  volumes:
+  - path: /etc/alertmanager
+    mount_path: /etc/alertmanager
+  instance_count: 1
+  instance_size_slug: basic-xs
+
+services:
+- name: grafana
+  image: grafana/grafana:latest
+  envs:
+  - key: GF_SECURITY_ADMIN_USER
+    scope: RUN_TIME
+    value: admin
+  - key: GF_SECURITY_ADMIN_PASSWORD
+    scope: RUN_TIME
+    value: admin
+  - key: GF_INSTALL_PLUGINS
+    scope: RUN_TIME
+    value: grafana-piechart-panel
+  volumes:
+  - path: /var/lib/grafana
+    mount_path: /var/lib/grafana
+  instance_count: 1
+  instance_size_slug: basic-xs
+
+ingress:
+  rules:
+  - match:
+      path: /api
+    service: monitoring
+  - match:
+      path: /metrics
+    service: monitoring
+  - match:
+      path: /grafana
+    service: grafana
+  - match:
+      path: /prometheus
+    service: prometheus
+  - match:
+      path: /alertmanager
+    service: alertmanager 

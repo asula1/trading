@@ -1,0 +1,38 @@
+# FastAPI 및 관련 패키지
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.4.2
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+python-jose==3.3.0
+passlib==1.7.4
+python-multipart==0.0.6
+email-validator==2.1.0.post1
+
+# 테스트 관련 패키지
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-asyncio==0.21.1
+httpx==0.25.1
+
+# 모니터링 관련 패키지
+prometheus-client==0.19.0
+psutil==5.9.6
+requests==2.31.0
+python-consul==1.1.0
+
+# 로깅 관련 패키지
+python-json-logger==2.0.7
+
+# 알림 관련 패키지
+slack-sdk==3.26.1
+
+# 린트 관련 패키지
+flake8==6.1.0
+black==23.11.0
+isort==5.12.0
+mypy==1.7.0
+
+# 문서화
+mkdocs==1.2.3
+mkdocs-material==7.3.0 

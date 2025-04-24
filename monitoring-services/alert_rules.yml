@@ -1,0 +1,134 @@
+groups:
+  - name: system_alerts
+    rules:
+      # CPU 사용량 알림
+      - alert: HighCPUUsage
+        expr: system_cpu_usage > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "높은 CPU 사용량"
+          description: "CPU 사용량이 80%를 초과했습니다 (현재 값: {{ $value }}%)"
+
+      - alert: CriticalCPUUsage
+        expr: system_cpu_usage > 90
+        for: 2m
+        labels:
+          severity: critical
+          service: system
+        annotations:
+          summary: "위험한 CPU 사용량"
+          description: "CPU 사용량이 90%를 초과했습니다 (현재 값: {{ $value }}%)"
+
+      # 메모리 사용량 알림
+      - alert: HighMemoryUsage
+        expr: system_memory_usage > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "높은 메모리 사용량"
+          description: "메모리 사용량이 85%를 초과했습니다 (현재 값: {{ $value }}%)"
+
+      - alert: CriticalMemoryUsage
+        expr: system_memory_usage > 95
+        for: 2m
+        labels:
+          severity: critical
+          service: system
+        annotations:
+          summary: "위험한 메모리 사용량"
+          description: "메모리 사용량이 95%를 초과했습니다 (현재 값: {{ $value }}%)"
+
+      # 디스크 사용량 알림
+      - alert: HighDiskUsage
+        expr: system_disk_usage > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "높은 디스크 사용량"
+          description: "디스크 사용량이 85%를 초과했습니다 (현재 값: {{ $value }}%)"
+
+      - alert: CriticalDiskUsage
+        expr: system_disk_usage > 95
+        for: 2m
+        labels:
+          severity: critical
+          service: system
+        annotations:
+          summary: "위험한 디스크 사용량"
+          description: "디스크 사용량이 95%를 초과했습니다 (현재 값: {{ $value }}%)"
+
+      # 네트워크 트래픽 알림
+      - alert: HighNetworkTraffic
+        expr: rate(system_network_in_bytes[5m]) > 1000000000 or rate(system_network_out_bytes[5m]) > 1000000000
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "높은 네트워크 트래픽"
+          description: "네트워크 트래픽이 1GB/s를 초과했습니다 (입력: {{ $value }} bytes/s)"
+
+  - name: service_alerts
+    rules:
+      # 서비스 상태 알림
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "서비스 다운"
+          description: "{{ $labels.job }} 서비스가 다운되었습니다"
+
+      - alert: ServiceHighLatency
+        expr: rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "높은 서비스 지연"
+          description: "{{ $labels.job }} 서비스의 응답 시간이 1초를 초과했습니다"
+
+  - name: container_alerts
+    rules:
+      # 컨테이너 메모리 사용량 알림
+      - alert: ContainerHighMemoryUsage
+        expr: container_memory_usage_bytes / container_spec_memory_limit_bytes * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: container
+        annotations:
+          summary: "높은 컨테이너 메모리 사용량"
+          description: "{{ $labels.container_name }} 컨테이너의 메모리 사용량이 80%를 초과했습니다"
+
+      # 컨테이너 CPU 사용량 알림
+      - alert: ContainerHighCPUUsage
+        expr: rate(container_cpu_usage_seconds_total[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: container
+        annotations:
+          summary: "높은 컨테이너 CPU 사용량"
+          description: "{{ $labels.container_name }} 컨테이너의 CPU 사용량이 80%를 초과했습니다"
+
+  - name: alert_status
+    rules:
+      - alert: AlertNotResolved
+        expr: alert_status == 1
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "미해결 알림"
+          description: "{{ $labels.alert_type }} 알림이 1시간 이상 해결되지 않았습니다." 

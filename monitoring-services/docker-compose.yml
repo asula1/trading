@@ -1,0 +1,118 @@
+version: '3.8'
+
+services:
+  # 모니터링 서비스
+  monitoring:
+    build: .
+    container_name: monitoring
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=monitoring
+      - POSTGRES_PASSWORD=monitoring
+      - POSTGRES_DB=monitoring
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+    depends_on:
+      - postgres
+      - consul
+    networks:
+      - monitoring_network
+
+  # PostgreSQL 데이터베이스
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=monitoring
+      - POSTGRES_PASSWORD=monitoring
+      - POSTGRES_DB=monitoring
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - monitoring_network
+
+  # Consul 서비스 디스커버리
+  consul:
+    image: consul:1.9
+    container_name: consul
+    restart: unless-stopped
+    ports:
+      - "8500:8500"
+    command: agent -server -bootstrap -ui -client=0.0.0.0
+    networks:
+      - monitoring_network
+
+  # Prometheus 메트릭 수집
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alert_rules.yml:/etc/prometheus/alert_rules.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - monitoring_network
+
+  # Alertmanager 알림 관리
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    networks:
+      - monitoring_network
+
+  # Grafana 대시보드
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring_network
+
+# 볼륨 정의
+volumes:
+  postgres_data:
+  prometheus_data:
+  alertmanager_data:
+  grafana_data:
+
+# 네트워크 정의
+networks:
+  monitoring_network:
+    driver: bridge 

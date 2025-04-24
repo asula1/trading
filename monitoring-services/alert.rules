@@ -1,0 +1,60 @@
+groups:
+  - name: system_alerts
+    rules:
+      - alert: HighCPUUsage
+        expr: system_cpu_usage > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 80% for more than 5 minutes"
+
+      - alert: HighMemoryUsage
+        expr: system_memory_usage > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is above 80% for more than 5 minutes"
+
+      - alert: HighDiskUsage
+        expr: system_disk_usage > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High disk usage detected"
+          description: "Disk usage is above 80% for more than 5 minutes"
+
+  - name: service_alerts
+    rules:
+      - alert: ServiceDown
+        expr: service_health_status == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service is down"
+          description: "{{ $labels.service_name }} has been down for more than 1 minute"
+
+      - alert: HighLatency
+        expr: monitoring_request_latency_seconds > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High request latency detected"
+          description: "Request latency is above 1 second for more than 5 minutes"
+
+  - name: network_alerts
+    rules:
+      - alert: HighNetworkTraffic
+        expr: rate(system_network_traffic{direction="incoming"}[5m]) > 1000000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High network traffic detected"
+          description: "Incoming network traffic is above 1MB/s for more than 5 minutes" 

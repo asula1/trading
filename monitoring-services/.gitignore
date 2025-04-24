@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 가상환경
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# 테스트
+.coverage
+coverage_report/
+htmlcov/
+.pytest_cache/
+.tox/
+
+# 로그
+*.log
+logs/
+
+# 데이터베이스
+*.db
+*.sqlite3
+
+# 문서
+site/
+docs/_build/
+
+# 기타
+.DS_Store
+Thumbs.db
+
+# Docker
+.docker/
+docker-compose.override.yml 
